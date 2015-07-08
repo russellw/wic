@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
   GetModuleFileName(0, me, MAX_PATH);
   auto myName = strrchr(me, '\\') + 1;
 
-  if (!strcmp(myName, "wic.exe")) {
+  if (!stricmp(myName, "wic.exe")) {
     if (argc != 2)
       help();
     auto command = argv[1];
@@ -133,8 +133,8 @@ int main(int argc, char **argv) {
         return 1;
       }
       del(cl.c_str());
-      move(realCl.c_str(), cl.c_str());
       del(cl64.c_str());
+      move(realCl.c_str(), cl.c_str());
       move(realCl64.c_str(), cl64.c_str());
       return 0;
     }
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (!strcmp(myName, "cl.exe")) {
+  if (!stricmp(myName, "cl.exe")) {
     string path(me, strrchr(me, '\\') + 1);
     int bits = endsWith(path, "\\x86_amd64\\") ? 64 : 32;
     auto wic = getenv("wic", bits);
@@ -154,20 +154,15 @@ int main(int argc, char **argv) {
       if (!program.empty() && !isSeparator(program.back()))
         program += '\\';
       program += "clang-cl.exe";
-      command = "clang-cl.exe";
+      command = "clang-cl.exe ";
     } else {
       program = path + "real-cl.exe";
-      command = "cl.exe";
+      command = "cl.exe ";
     }
-    for (auto i = argv + 1; i != argv + argc; ++i) {
-      command += ' ';
-      auto q = strchr(*i, ' ');
-      if (q)
-        command += '"';
-      command += *i;
-      if (q)
-        command += '"';
-    }
+    auto s = GetCommandLine();
+    auto t = strchr(s + 1, *s == '"' ? '"' : ' ');
+    s = t ? t + 1 : "";
+    command += s;
 
     STARTUPINFO si;
     ZeroMemory(&si, sizeof si);
