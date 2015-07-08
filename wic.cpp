@@ -12,6 +12,25 @@ using std::regex_match;
 #include <string>
 using std::string;
 
+// utility functions
+
+static bool endsWith(const string &s, char *suffix) {
+  auto n = strlen(suffix);
+  if (n > s.size())
+    return 0;
+  return !s.compare(s.size() - n, n, suffix);
+}
+
+static char *getenv(char *name, int bits) {
+  char buf[16];
+  sprintf(buf, "%d", bits);
+  auto nameBits = string(name) + buf;
+  auto s = getenv(nameBits.c_str());
+  if (s)
+    return s;
+  return getenv(name);
+}
+
 static void help() {
   printf("usage: wic command\n"
          "\n"
@@ -19,6 +38,18 @@ static void help() {
          "uninstall  put Visual Studio back the way it was\n");
   exit(0);
 }
+
+static bool isSeparator(char c) {
+  switch (c) {
+  case '/':
+  case ':':
+  case '\\':
+    return 1;
+  }
+  return 0;
+}
+
+// system functions
 
 static void err(char *s) {
   auto error = GetLastError();
@@ -49,11 +80,12 @@ static void move(const char *oldFile, const char *newFile) {
     err("MoveFile");
 }
 
+// main
+
 int main(int argc, char **argv) {
-  char myFile[MAX_PATH];
-  GetModuleFileName(0, myFile, MAX_PATH);
-  auto separator = strrchr(myFile, '\\');
-  auto myName = separator + 1;
+  char me[MAX_PATH];
+  GetModuleFileName(0, me, MAX_PATH);
+  auto myName = strrchr(me, '\\') + 1;
 
   if (!strcmp(myName, "wic.exe")) {
     if (argc != 2)
@@ -89,8 +121,8 @@ int main(int argc, char **argv) {
         move(cl.c_str(), realCl.c_str());
         move(cl64.c_str(), realCl64.c_str());
       }
-      copy(myFile, cl.c_str());
-      copy(myFile, cl64.c_str());
+      copy(me, cl.c_str());
+      copy(me, cl64.c_str());
       return 0;
     }
 
@@ -112,10 +144,21 @@ int main(int argc, char **argv) {
   }
 
   if (!strcmp(myName, "cl.exe")) {
-    separator[1] = 0;
-    auto program = string(myFile) + "real-cl.exe";
-
-    string command = "cl.exe";
+    string path(me, strrchr(me, '\\') + 1);
+    int bits = endsWith(path, "\\x86_amd64\\") ? 64 : 32;
+    auto wic = getenv("wic", bits);
+    string program;
+    string command;
+    if (wic) {
+      program = string(wic);
+      if (!program.empty() && !isSeparator(program.back()))
+        program += '\\';
+      program += "clang-cl.exe";
+      command = "clang-cl.exe";
+    } else {
+      program = path + "real-cl.exe";
+      command = "cl.exe";
+    }
     for (auto i = argv + 1; i != argv + argc; ++i) {
       command += ' ';
       auto q = strchr(*i, ' ');
