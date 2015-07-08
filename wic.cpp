@@ -12,6 +12,14 @@ using std::regex_match;
 #include <string>
 using std::string;
 
+static void help() {
+  printf("usage: wic command\n"
+         "\n"
+         "install    install to Visual Studio directory\n"
+         "uninstall  put Visual Studio back the way it was\n");
+  exit(0);
+}
+
 static void err(char *s) {
   // Retrieve the system error message for the last-error code
   auto error = GetLastError();
@@ -26,19 +34,32 @@ static void err(char *s) {
   exit(error);
 }
 
-int main(int argc, char **argv) {
-  char buf[MAX_PATH];
-  GetModuleFileName(NULL, buf, MAX_PATH);
-  auto name = strrchr(buf, '\\') + 1;
+static void copy(const char *oldFile, const char *newFile) {
+  printf("copying %s -> %s\n", oldFile, newFile);
+  if (!CopyFile(oldFile, newFile, 0))
+    err("CopyFile");
+}
 
-  if (!strcmp(name, "wic.exe")) {
-    if (argc != 2) {
-      printf("usage: wic command\n"
-             "\n"
-             "install    install to Visual Studio directory\n"
-             "uninstall  put Visual Studio back the way it was\n");
-      return 1;
-    }
+static void del(const char *file) {
+  printf("deleting %s\n", file);
+  if (!DeleteFile(file))
+    err("DeleteFile");
+}
+
+static void move(const char *oldFile, const char *newFile) {
+  printf("moving %s -> %s\n", oldFile, newFile);
+  if (!MoveFile(oldFile, newFile))
+    err("MoveFile");
+}
+
+int main(int argc, char **argv) {
+  char myFile[MAX_PATH];
+  GetModuleFileName(0, myFile, MAX_PATH);
+  auto myName = strrchr(myFile, '\\') + 1;
+
+  if (!strcmp(myName, "wic.exe")) {
+    if (argc != 2)
+      help();
     auto command = argv[1];
 
     auto path = getenv("path");
@@ -60,26 +81,31 @@ int main(int argc, char **argv) {
     }
     string bin = s;
     auto cl = bin + "\\cl.exe";
-    auto real_cl = bin + "\\real-cl.exe";
+    auto cl64 = bin + "\\x86_amd64\\cl.exe";
+    auto realCl = bin + "\\real-cl.exe";
+    auto realCl64 = bin + "\\x86_amd64\\real-cl.exe";
 
     if (!strcmp(command, "install")) {
-      if (GetFileAttributes(real_cl.c_str()) == INVALID_FILE_ATTRIBUTES &&
-          GetLastError() == ERROR_FILE_NOT_FOUND)
-        if (!MoveFile(cl.c_str(), real_cl.c_str()))
-          err("MoveFile");
+      if (GetFileAttributes(realCl.c_str()) == INVALID_FILE_ATTRIBUTES &&
+          GetLastError() == ERROR_FILE_NOT_FOUND) {
+        move(cl.c_str(), realCl.c_str());
+        move(cl64.c_str(), realCl64.c_str());
+      }
+      copy(myFile, cl.c_str());
+      copy(myFile, cl64.c_str());
       return 0;
     }
 
     if (!strcmp(command, "uninstall")) {
-      if (GetFileAttributes(real_cl.c_str()) == INVALID_FILE_ATTRIBUTES &&
+      if (GetFileAttributes(realCl.c_str()) == INVALID_FILE_ATTRIBUTES &&
           GetLastError() == ERROR_FILE_NOT_FOUND) {
         puts("wic is not installed");
         return 1;
       }
-      if (!DeleteFile(cl.c_str()))
-        err("DeleteFile");
-      if (!MoveFile(real_cl.c_str(), cl.c_str()))
-        err("MoveFile");
+      del(cl.c_str());
+      move(realCl.c_str(), cl.c_str());
+      del(cl64.c_str());
+      move(realCl64.c_str(), cl64.c_str());
       return 0;
     }
 
@@ -87,7 +113,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  if (!strcmp(name, "cl.exe")) {
+  if (!strcmp(myName, "cl.exe")) {
   }
 
   puts("unknown program name");
