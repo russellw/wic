@@ -122,12 +122,15 @@ int main(int argc, char **argv) {
     }
 
     PROCESS_INFORMATION pi;
-
     if (!CreateProcess(program.c_str(), (char *)command.c_str(), 0, 0, 1, 0, 0,
                        0, 0, &pi))
       err("CreateProcess");
     WaitForSingleObject(pi.hProcess, INFINITE);
-    return 0;
+
+    DWORD exitCode;
+    if (!GetExitCodeProcess(pi.hProcess, &exitCode))
+      err("GetExitCodeProcess");
+    return exitCode;
   }
 
   puts("unknown program name");
