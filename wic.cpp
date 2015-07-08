@@ -21,33 +21,30 @@ static void help() {
 }
 
 static void err(char *s) {
-  // Retrieve the system error message for the last-error code
   auto error = GetLastError();
   char *msg;
   FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                     FORMAT_MESSAGE_IGNORE_INSERTS,
                 0, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
                 (char *)&msg, 0, 0);
-
-  // Display the error message and exit the process
-  printf("%s failed with error %d: %s\n", s, error, msg);
+  printf("%s failed with error %d: %s", s, error, msg);
   exit(error);
 }
 
 static void copy(const char *oldFile, const char *newFile) {
-  printf("copying %s -> %s\n", oldFile, newFile);
+  printf("copy %s -> %s\n", oldFile, newFile);
   if (!CopyFile(oldFile, newFile, 0))
     err("CopyFile");
 }
 
 static void del(const char *file) {
-  printf("deleting %s\n", file);
+  printf("delete %s\n", file);
   if (!DeleteFile(file))
     err("DeleteFile");
 }
 
 static void move(const char *oldFile, const char *newFile) {
-  printf("moving %s -> %s\n", oldFile, newFile);
+  printf("move %s -> %s\n", oldFile, newFile);
   if (!MoveFile(oldFile, newFile))
     err("MoveFile");
 }
@@ -55,7 +52,8 @@ static void move(const char *oldFile, const char *newFile) {
 int main(int argc, char **argv) {
   char myFile[MAX_PATH];
   GetModuleFileName(0, myFile, MAX_PATH);
-  auto myName = strrchr(myFile, '\\') + 1;
+  auto separator = strrchr(myFile, '\\');
+  auto myName = separator + 1;
 
   if (!strcmp(myName, "wic.exe")) {
     if (argc != 2)
@@ -114,6 +112,22 @@ int main(int argc, char **argv) {
   }
 
   if (!strcmp(myName, "cl.exe")) {
+    separator[1] = 0;
+    auto program = string(myFile) + "real-cl.exe";
+
+    string command = "cl.exe";
+    for (auto i = argv + 1; i != argv + argc; ++i) {
+      command += ' ';
+      command += *i;
+    }
+
+    PROCESS_INFORMATION pi;
+
+    if (!CreateProcess(program.c_str(), (char *)command.c_str(), 0, 0, 1, 0, 0,
+                       0, 0, &pi))
+      err("CreateProcess");
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    return 0;
   }
 
   puts("unknown program name");
