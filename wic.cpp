@@ -118,12 +118,23 @@ int main(int argc, char **argv) {
     string command = "cl.exe";
     for (auto i = argv + 1; i != argv + argc; ++i) {
       command += ' ';
+      auto q = strchr(*i, ' ');
+      if (q)
+        command += '"';
       command += *i;
+      if (q)
+        command += '"';
     }
 
+    STARTUPINFO si;
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+
     PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof pi);
+
     if (!CreateProcess(program.c_str(), (char *)command.c_str(), 0, 0, 1, 0, 0,
-                       0, 0, &pi))
+                       0, &si, &pi))
       err("CreateProcess");
     WaitForSingleObject(pi.hProcess, INFINITE);
 
