@@ -154,15 +154,14 @@ int main(int argc, char **argv) {
       if (!program.empty() && !isSeparator(program.back()))
         program += '\\';
       program += "clang-cl.exe";
-      command = "clang-cl.exe ";
+      command = "clang-cl.exe -Wno-invalid-token-paste ";
     } else {
       program = path + "real-cl.exe";
       command = "cl.exe ";
     }
     auto s = GetCommandLine();
     auto t = strchr(s + 1, *s == '"' ? '"' : ' ');
-    s = t ? t + 1 : "";
-    command += s;
+    command += t ? t + 1 : "";
 
     STARTUPINFO si;
     ZeroMemory(&si, sizeof si);
