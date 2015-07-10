@@ -7,7 +7,7 @@ Thus, wic renames `cl.exe` to `real-cl.exe` and inserts itself as `cl.exe` where
 
 To use wic, bring up a command window that has Visual Studio in the path and type `wic install`. This requires administrator privilege in order to modify the contents of `Program Files (x86)`; an easy way to arrange this is to bring up a new command window by right-clicking on the icon and selecting 'Run as administrator'. Subsequent operation does not require this privilege.
 
-To put things back the way they were, type 'wic uninstall`.
+To put things back the way they were, type `wic uninstall`.
 
 By default, wic calls `real-cl.exe` for normal operation of Visual Studio. To tell it to start calling Clang, set the `wic` environment variable with the location of the Clang binary folder e.g.
 
@@ -21,4 +21,4 @@ To switch back to Microsoft C++, unset the environment variable:
 set wic=
 ```
 
-In some cases it is necessary to select Clang only for 32-bit or only for 64-bit builds. To do this, use the environment variable 'wic32` or `wic64`.
+In some cases it is necessary to select Clang only for 32-bit or only for 64-bit builds. To do this, use the environment variable `wic32` or `wic64`.
