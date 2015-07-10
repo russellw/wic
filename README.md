@@ -12,7 +12,7 @@ To put things back the way they were, type `wic uninstall`.
 By default, wic calls `real-cl.exe` for normal operation of Visual Studio. To tell it to start calling Clang, set the `wic` environment variable with the location of the Clang binary folder e.g.
 
 ```
-set wic=C:\llvm\buld\Release\bin
+set wic=C:\llvm\build\Release\bin
 ```
 
 To switch back to Microsoft C++, unset the environment variable:
