@@ -175,6 +175,11 @@ int main(int argc, char **argv) {
         program += '\\';
       program += "clang-cl.exe";
       command = "clang-cl.exe -Wno-invalid-token-paste ";
+      auto args = getenv("wic-args");
+      if (args) {
+        command += args;
+        command += ' ';
+      }
     } else {
       program = path + "real-cl.exe";
       command = "cl.exe ";
