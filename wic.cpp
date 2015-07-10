@@ -83,26 +83,6 @@ static void move(const char *oldFile, const char *newFile) {
 // main
 
 int main(int argc, char **argv) {
-  for (auto i = argv + 1; i != argv + argc; ++i) {
-    auto s = *i;
-    if (*s != '-')
-      continue;
-    while (*s == '-')
-      ++s;
-    switch (*s) {
-    case '?':
-    case 'h':
-      help();
-    case 'V':
-    case 'v':
-      puts("wic version 1");
-      return 0;
-    default:
-      printf("%s: unknown option\n", *i);
-      return 1;
-    }
-  }
-
   char me[MAX_PATH];
   GetModuleFileName(0, me, MAX_PATH);
   auto myName = strrchr(me, '\\') + 1;
@@ -110,7 +90,24 @@ int main(int argc, char **argv) {
   if (!stricmp(myName, "wic.exe")) {
     if (argc != 2)
       help();
-    auto command = argv[1];
+    auto s = argv[1];
+    if (*s == '-' || *s == '/') {
+      while (*s == '-' || *s == '/')
+        ++s;
+      switch (*s) {
+      case '?':
+      case 'h':
+        help();
+      case 'V':
+      case 'v':
+        puts("wic version 1");
+        return 0;
+      default:
+        printf("%s: unknown option\n", argv[1]);
+        return 1;
+      }
+    }
+    auto command = s;
 
     auto path = getenv("path");
     if (!path) {
@@ -118,7 +115,7 @@ int main(int argc, char **argv) {
       return 1;
     }
     path = strdup(path);
-    auto s = strtok(path, ";");
+    s = strtok(path, ";");
     auto e = regex(".*Microsoft Visual Studio.*BIN");
     while (s) {
       if (regex_match(s, e))
