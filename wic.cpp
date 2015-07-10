@@ -83,6 +83,26 @@ static void move(const char *oldFile, const char *newFile) {
 // main
 
 int main(int argc, char **argv) {
+  for (auto i = argv + 1; i != argv + argc; ++i) {
+    auto s = *i;
+    if (*s != '-')
+      continue;
+    while (*s == '-')
+      ++s;
+    switch (*s) {
+    case '?':
+    case 'h':
+      help();
+    case 'V':
+    case 'v':
+      puts("wic version 1");
+      return 0;
+    default:
+      printf("%s: unknown option\n", *i);
+      return 1;
+    }
+  }
+
   char me[MAX_PATH];
   GetModuleFileName(0, me, MAX_PATH);
   auto myName = strrchr(me, '\\') + 1;
