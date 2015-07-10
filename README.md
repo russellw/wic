@@ -23,4 +23,4 @@ set wic=
 
 In some cases it is necessary to select Clang only for 32-bit or only for 64-bit builds. To do this, use the environment variable `wic32` or `wic64`.
 
-wic also calls Clang with `-Wno-invalid-token-paste` which is necessary for compatibility with the Microsoft preprocessor.
+wic calls Clang with `-Wno-invalid-token-paste` which is necessary for compatibility with the Microsoft preprocessor. In addition, further arguments to Clang may be provided by setting the `wic-args` environment variable.
