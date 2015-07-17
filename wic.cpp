@@ -21,6 +21,15 @@ static bool endsWith(const string &s, char *suffix) {
   return !s.compare(s.size() - n, n, suffix);
 }
 
+static string filename(const char *path) {
+  char drive[_MAX_DRIVE];
+  char dir[_MAX_DIR];
+  char fname[_MAX_FNAME];
+  char ext[_MAX_EXT];
+  _splitpath(path, drive, dir, fname, ext);
+  return string(fname) + ext;
+}
+
 static char *getenv(char *name, int bits) {
   char buf[16];
   sprintf(buf, "%d", bits);
@@ -177,7 +186,7 @@ int main(int argc, char **argv) {
           ++s;
           break;
         }
-        auto file = dir + s;
+        auto file = dir + filename(s);
         CopyFile(s, file.c_str(), 0);
       }
     }
