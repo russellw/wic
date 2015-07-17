@@ -163,6 +163,25 @@ int main(int argc, char **argv) {
   if (!stricmp(myName, "cl.exe")) {
     string path(me, strrchr(me, '\\') + 1);
     int bits = endsWith(path, "\\x86_amd64\\") ? 64 : 32;
+
+    auto wicSave = getenv("wic-save", bits);
+    if (wicSave) {
+      string dir = string(wicSave) + '\\';
+      for (auto i = argv + 1; i != argv + argc; ++i) {
+        auto s = *i;
+        switch (*s) {
+        case '-':
+        case '/':
+          continue;
+        case '@':
+          ++s;
+          break;
+        }
+        auto file = dir + s;
+        CopyFile(s, file.c_str(), 0);
+      }
+    }
+
     auto wic = getenv("wic", bits);
     string program;
     string command;
