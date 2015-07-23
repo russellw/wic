@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
     string args;
     auto wicArgs = getenv("wic-args");
     if (wicArgs)
-      args = wicArgs + ' ';
+      args = string(wicArgs) + ' ';
     auto s = GetCommandLine();
     s = strchr(s + 1, *s == '"' ? '"' : ' ');
     if (s)
