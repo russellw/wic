@@ -1,13 +1,10 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4530)
+#pragma warning(disable : 4577)
 #endif
 
 #include <stdio.h>
 #include <windows.h>
-
-#include <regex>
-using std::regex;
-using std::regex_match;
 
 #include <string>
 using std::string;
@@ -28,16 +25,6 @@ static string filename(const char *path) {
   char ext[_MAX_EXT];
   _splitpath(path, drive, dir, fname, ext);
   return string(fname) + ext;
-}
-
-static char *getenv(char *name, int bits) {
-  char buf[16];
-  sprintf(buf, "%d", bits);
-  auto nameBits = string(name) + buf;
-  auto s = getenv(nameBits.c_str());
-  if (s)
-    return s;
-  return getenv(name);
 }
 
 static void help() {
@@ -125,9 +112,10 @@ int main(int argc, char **argv) {
     }
     path = strdup(path);
     s = strtok(path, ";");
-    auto e = regex(".*Microsoft Visual Studio.*BIN");
     while (s) {
-      if (regex_match(s, e))
+      string dir = s;
+      auto cl = dir + "\\cl.exe";
+      if (GetFileAttributes(cl.c_str()) != INVALID_FILE_ATTRIBUTES)
         break;
       s = strtok(0, ";");
     }
@@ -135,20 +123,15 @@ int main(int argc, char **argv) {
       puts("Visual Studio not found in path");
       return 1;
     }
-    string bin = s;
-    auto cl = bin + "\\cl.exe";
-    auto cl64 = bin + "\\x86_amd64\\cl.exe";
-    auto realCl = bin + "\\real-cl.exe";
-    auto realCl64 = bin + "\\x86_amd64\\real-cl.exe";
+    string dir = s;
+    auto cl = dir + "\\cl.exe";
+    auto realCl = dir + "\\real-cl.exe";
 
     if (!strcmp(command, "install")) {
       if (GetFileAttributes(realCl.c_str()) == INVALID_FILE_ATTRIBUTES &&
-          GetLastError() == ERROR_FILE_NOT_FOUND) {
+          GetLastError() == ERROR_FILE_NOT_FOUND)
         move(cl.c_str(), realCl.c_str());
-        move(cl64.c_str(), realCl64.c_str());
-      }
       copy(me, cl.c_str());
-      copy(me, cl64.c_str());
       return 0;
     }
 
@@ -159,9 +142,7 @@ int main(int argc, char **argv) {
         return 1;
       }
       del(cl.c_str());
-      del(cl64.c_str());
       move(realCl.c_str(), cl.c_str());
-      move(realCl64.c_str(), cl64.c_str());
       return 0;
     }
 
@@ -170,12 +151,9 @@ int main(int argc, char **argv) {
   }
 
   if (!stricmp(myName, "cl.exe")) {
-    string path(me, strrchr(me, '\\') + 1);
-    int bits = endsWith(path, "\\x86_amd64\\") ? 64 : 32;
-
-    auto wicSave = getenv("wic-save", bits);
+    auto wicSave = getenv("wic-save");
     if (wicSave) {
-      string dir = string(wicSave) + '\\';
+      auto dir = string(wicSave) + '\\';
       for (auto i = argv + 1; i != argv + argc; ++i) {
         auto s = *i;
         switch (*s) {
@@ -191,27 +169,22 @@ int main(int argc, char **argv) {
       }
     }
 
-    auto wic = getenv("wic", bits);
-    string program;
-    string command;
-    if (wic) {
-      program = string(wic);
-      if (!program.empty() && !isSeparator(program.back()))
-        program += '\\';
-      program += "clang-cl.exe";
-      command = "clang-cl.exe -Wno-invalid-token-paste ";
-      auto args = getenv("wic-args");
-      if (args) {
-        command += args;
-        command += ' ';
-      }
-    } else {
-      program = path + "real-cl.exe";
-      command = "cl.exe ";
-    }
+    string dir(me, strrchr(me, '\\') + 1);
+    auto exe = dir + "real-cl.exe";
+    auto wicExe = getenv("wic-exe");
+    if (wicExe)
+      exe = wicExe;
+
+    string args;
+    auto wicArgs = getenv("wic-args");
+    if (wicArgs)
+      args = wicArgs + ' ';
     auto s = GetCommandLine();
-    auto t = strchr(s + 1, *s == '"' ? '"' : ' ');
-    command += t ? t + 1 : "";
+    s = strchr(s + 1, *s == '"' ? '"' : ' ');
+    if (s)
+      args += s + 1;
+
+    auto command = string("\"") + exe + "\" " + args;
 
     STARTUPINFO si;
     ZeroMemory(&si, sizeof si);
@@ -220,8 +193,8 @@ int main(int argc, char **argv) {
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof pi);
 
-    if (!CreateProcess(program.c_str(), (char *)command.c_str(), 0, 0, 1, 0, 0,
-                       0, &si, &pi))
+    if (!CreateProcess(exe.c_str(), (char *)command.c_str(), 0, 0, 1, 0, 0, 0,
+                       &si, &pi))
       err("CreateProcess");
     WaitForSingleObject(pi.hProcess, INFINITE);
 
