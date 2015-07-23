@@ -8,7 +8,7 @@ To put things back the way they were, type `wic uninstall`.
 
 The operation of wic is controlled by the following environment variables.
 
-###wic-args
+####wic-args
 
 Prepend extra command line arguments before calling the compiler. For example, to set a necessary Clang flag for compatibility with the Microsoft preprocessor:
 
@@ -16,7 +16,7 @@ Prepend extra command line arguments before calling the compiler. For example, t
 set wic-args=-Wno-invalid-token-paste
 ```
 
-###wic-exe
+####wic-exe
 
 By default, wic calls `real-cl.exe` for normal operation of Visual C++. To tell it to start calling another compiler such as Clang, set `wic-exe` to the full path of the replacement program e.g.
 
@@ -30,7 +30,7 @@ To switch back, unset the environment variable:
 set wic-exe=
 ```
 
-###wic-save
+####wic-save
 
 Some build procedures create temporary files after the build starts and delete them before it ends; modifying or debugging the procedure may require some way to capture a copy of these files. If `wic-save` is set, wic will try to save a copy of every file named on the compiler command line to that directory e.g.
 
