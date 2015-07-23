@@ -6,6 +6,8 @@ To use wic, bring up a command window that has Visual Studio in the path and typ
 
 To put things back the way they were, type `wic uninstall`.
 
+The question of _which_ `cl.exe` to replace is nontrivial; Visual C++ 2015 contains six different `cl.exe`s, different build systems call different ones in different circumstances, and across-the-board replacement wouldn't necessarily be correct e.g. an attempt to build Python using Clang requires the 64-bit `cl.exe` redirected and the 32-bit one left alone. Thus, wic replaces the `cl.exe` indicated by the current `path` setting. If installing wic seems to have no effect, check the `path` and consider trying a different Visual C++ settings batch file.
+
 The operation of wic is controlled by the following environment variables.
 
 ####wic-args
