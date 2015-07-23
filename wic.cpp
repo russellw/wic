@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
         help();
       case 'V':
       case 'v':
-        puts("wic version 2");
+        puts("wic version 3");
         return 0;
       default:
         printf("%s: unknown option\n", argv[1]);
