@@ -2,11 +2,11 @@ Wic intercepts calls to the Microsoft C++ compiler and records, modifies or redi
 
 A variety of build systems are used on Windows, most of which assume they have to call the Microsoft compiler, `cl.exe`. The only general way to intercept these calls is to interpose a program under the name of this executable. Thus, wic renames `cl.exe` to `real-cl.exe` and inserts itself as `cl.exe` where it can in turn call either `real-cl.exe` or some other program.
 
-To use wic, bring up a command window that has Visual Studio in the path and type `wic install`. This requires administrator privilege in order to modify the contents of `Program Files (x86)`; an easy way to arrange this is to bring up a new command window by right-clicking on the icon and selecting 'Run as administrator'. Subsequent operation does not require this privilege.
+To use wic, bring up a command window that has Visual C++ in `path` and type `wic install`. This requires administrator privilege in order to modify the contents of `Program Files (x86)`; an easy way to arrange this is to bring up a new command window by right-clicking on the icon and selecting 'Run as administrator'. Subsequent operation does not require this privilege.
 
 To put things back the way they were, type `wic uninstall`.
 
-The question of _which_ `cl.exe` to replace is nontrivial; Visual C++ 2015 contains six different `cl.exe`s, different build systems call different ones in different circumstances, and across-the-board replacement wouldn't necessarily be correct e.g. an attempt to build Python using Clang requires the 64-bit `cl.exe` redirected and the 32-bit one left alone. Thus, wic replaces the `cl.exe` indicated by the current `path` setting. If installing wic seems to have no effect, check the `path` and consider trying a different Visual C++ settings batch file.
+The question of _which_ `cl.exe` to replace is nontrivial; Visual C++ 2015 contains six different `cl.exe`s, different build systems call different ones in different circumstances, and across-the-board replacement wouldn't necessarily be correct e.g. building Python using Clang requires the 64-bit `cl.exe` redirected and the 32-bit one left alone. Thus, wic replaces the `cl.exe` indicated by the current `path` setting. If installing wic seems to have no effect, check `path` and consider trying a different Visual C++ settings batch file.
 
 The operation of wic is controlled by the following environment variables.
 
